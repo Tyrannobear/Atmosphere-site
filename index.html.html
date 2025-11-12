@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atmosphere & Climate Q&A – Owen Valley Middle School</title>
+<style>
+  :root{ --bg:#f6f7f9; --card:#ffffff; --text:#121417; --muted:#60646c; --border:#e6e8ec; --accent:#0b6bcb; }
+  *{box-sizing:border-box}
+  body{margin:0; font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text)}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{position:sticky; top:0; z-index:10; backdrop-filter: saturate(180%) blur(10px); background:#ffffffcc; border-bottom:1px solid var(--border)}
+  .wrap{max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; gap:12px; align-items:center}
+  .title{font-weight:700; font-size:18px}
+  .search{margin-left:auto; display:flex; gap:10px; align-items:center}
+  .search input{padding:10px 12px; border-radius:12px; border:1px solid var(--border); width:240px}
+  .layout{max-width:1100px; margin:0 auto; padding:20px; display:grid; grid-template-columns:260px 1fr; gap:20px}
+  nav{position:sticky; top:66px; max-height:calc(100vh - 86px); overflow:auto; padding-right:6px}
+  nav ul{list-style:none; padding:0; margin:0}
+  nav li a{display:block; padding:8px 10px; border-radius:10px; color:#222}
+  nav li a:hover{background:#f0f2f5}
+  section.card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  h2{margin:0 0 8px 0; font-size:20px}
+  .muted{color:var(--muted)}
+  ul{margin:6px 0 6px 1.25rem}
+  footer{border-top:1px solid var(--border); margin-top:26px; padding:18px 0; text-align:center; color:var(--muted); font-size:14px}
+  .hide{display:none !important}
+  .controls{font-size:14px; color:var(--muted); display:flex; align-items:center; gap:8px}
+  .compact p, .compact li{margin:2px 0}
+  @media (max-width: 900px){ .layout{grid-template-columns:1fr} nav{display:none} .search input{width:180px} }
+  mark{background:#fff2a8}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="title">Atmosphere & Climate Q&A</div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search topics…">
+      <label class="controls"><input type="checkbox" id="compact"> Compact view</label>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <nav>
+    <ul id="toc"></ul>
+  </nav>
+  <div id="content" class="content"></div>
+</main>
+
+<footer>
+  © <span id="yr"></span> Mr. Davis – Owen Valley Middle School • Built for classroom use.
+</footer>
+
+<script>
+const sections = [
+  {id:'importance',title:'Why is the atmosphere important?',body:`<p>Earth’s atmosphere is a protective, life‑supporting shell. It <strong>provides oxygen</strong> to breathe, <strong>traps heat</strong> (the natural greenhouse effect), <strong>blocks harmful UV</strong>, <strong>moves water</strong> via weather, and <strong>redistributes energy</strong>. It also burns up many meteoroids before they reach the surface.</p>`},
+  {id:'composition',title:'What gases are most common in Earth’s atmosphere? Give the percentages.',body:`<ul><li><strong>Nitrogen (N₂)</strong>: ~78.1%</li><li><strong>Oxygen (O₂)</strong>: ~20.9%</li><li><strong>Argon (Ar)</strong>: ~0.93%</li><li><strong>Carbon dioxide (CO₂)</strong>: ~0.04% (≈420 ppm; varies)</li><li><strong>Water vapor (H₂O)</strong>: variable ~0–4%</li></ul><p class='muted'>Trace gases include neon, helium, methane (CH₄), nitrous oxide (N₂O), and ozone (O₃).</p>`},
+  {id:'gh-effect',title:'What is the greenhouse effect (describe how it works)?',body:`<p>The <strong>natural greenhouse effect</strong> warms Earth’s surface. Sunlight warms land and oceans; Earth re‑emits infrared. <strong>Greenhouse gases</strong> absorb and re‑radiate some IR, keeping temperatures suitable for life. Human activities are <strong>increasing greenhouse gases</strong>, strengthening this effect and causing <strong>global warming</strong>.</p>`},
+  {id:'gh-gases',title:'What are the main greenhouse gases?',body:`<ul><li><strong>Water vapor (H₂O)</strong> — feedback.</li><li><strong>Carbon dioxide (CO₂)</strong> — long‑lived, main driver.</li><li><strong>Methane (CH₄)</strong> — strong per molecule, shorter‑lived.</li><li><strong>Nitrous oxide (N₂O)</strong></li><li><strong>Ozone (O₃)</strong> (troposphere)</li><li><strong>Fluorinated gases</strong> (CFCs/HCFCs/HFCs)</li></ul>`},
+  {id:'gh-sources',title:'Describe how each gas contributes and how it gets into our atmosphere.',body:`<ul><li><strong>H₂O</strong>: strong IR absorber; <em>sources</em> evaporation/transpiration.</li><li><strong>CO₂</strong>: IR absorber; <em>sources</em> fossil fuels, cement, deforestation; natural respiration/volcanoes.</li><li><strong>CH₄</strong>: high warming; <em>sources</em> wetlands, livestock, rice, landfills, fossil fuel extraction.</li><li><strong>N₂O</strong>: <em>sources</em> soils/fertilizers, industry, biomass burning.</li><li><strong>O₃ (tropospheric)</strong>: forms in air from reactions (see ozone section).</li><li><strong>F‑gases</strong>: synthetic coolants/propellants; very high warming potential.</li></ul>`},
+  {id:'air-pollution',title:'What is air pollution?',body:`<p>Gases, particles, or chemicals in air at levels that harm health, ecosystems, or materials. Can be <strong>natural</strong> (wildfires, volcanoes) or <strong>human‑made</strong> (vehicles, power plants, solvents, agriculture).</p>`},
+  {id:'types-pollution',title:'Describe 3 types of air pollution found in our atmosphere',body:`<ul><li><strong>Particulate matter (PM₂.₅/PM₁₀)</strong></li><li><strong>Ground‑level ozone (O₃)</strong> from NOₓ+VOCs+sunlight</li><li><strong>SO₂ & NOₓ</strong> leading to acid rain and smog</li></ul>`},
+  {id:'history',title:'When did air pollution begin? (Is this just a recent development?)',body:`<p>Not recent only. Documented since early cities; surged during the <strong>Industrial Revolution</strong> (1700s–1800s) with coal. 20th‑century urbanization and cars expanded smog.</p>`},
+  {id:'primary-secondary',title:'What is primary and secondary air pollution?',body:`<ul><li><strong>Primary</strong>: emitted directly (SO₂, CO, soot).</li><li><strong>Secondary</strong>: forms via reactions in air (e.g., ozone, some PM, nitric/sulfuric acids).</li></ul>`},
+  {id:'trop-ozone',title:'Tropospheric Ozone…',body:`<p><strong>Two places ozone is found</strong>: (1) <strong>stratosphere</strong> (good—UV shield), (2) <strong>troposphere</strong> (bad—pollutant & greenhouse gas).</p><p><strong>Causes</strong>: Sunlight + <strong>NOₓ</strong> + <strong>VOCs</strong> from vehicles, power plants, solvents, some natural sources.</p><p><strong>Is it bad?</strong> Yes—irritates lungs/eyes, triggers asthma, reduces crop yields, damages materials.</p><p><strong>Common name</strong>: a key part of <strong>photochemical smog</strong>.</p>`},
+  {id:'global-effects',title:'What are the global effects of air pollution? Explain why the two are a concern.',body:`<ul><li><strong>Climate change</strong>: greenhouse gases warm the planet; black carbon darkens snow/ice.</li><li><strong>Acid deposition</strong>: harms lakes/forests; corrodes buildings.</li><li><strong>Health & agriculture</strong>: premature deaths; reduced crop yields.</li></ul>`},
+  {id:'ozone-hole',title:'Ozone Hole…',body:`<p><strong>Concern</strong>: more harmful UV reaches the surface.</p><p><strong>Cause</strong>: man‑made <strong>CFCs</strong> and related chemicals; springtime reactions over Antarctica destroy O₃.</p><p><strong>Discovery</strong>: <strong>1985</strong> (British Antarctic Survey).</p>`},
+  {id:'global-warming',title:'What is Global Warming? What is the effect of global warming?',body:`<p><strong>Global warming</strong> = long‑term rise in Earth’s average surface temperature from increased greenhouse gases.</p><p><strong>Observed change</strong>: about <strong>~1.1–1.2 °C</strong> since late 1800s.</p><p><strong>Effects</strong>: more extreme heat, heavier rain, some regions drier, sea‑level rise/coastal flooding, glacier/ice loss, ecosystem impacts, health risks.</p>`},
+  {id:'temp-century',title:'How has Earth’s temperature changed over the last century?',body:`<p>Up roughly <strong>~1.1–1.2 °C</strong> since the late 19th century, with most warming in recent decades.</p>`},
+  {id:'effects-now',title:'List the effects of climate change due to global warming (that we are seeing now).',body:`<ul><li>Hotter extremes and longer heat waves</li><li>Heavier downpours; floods</li><li>Worsening drought in some regions</li><li>Wildfire‑prone conditions</li><li>Glacier/sea‑ice loss; rising seas</li><li>Ocean warming & acidification</li><li>Ecosystem and seasonal shifts</li></ul>`},
+  {id:'predictions',title:'What do they predict will happen in the future due to global warming and climate change?',body:`<p>Depends on emissions. Expect continued warming, more extreme heat, heavier precipitation in many wet regions, worse drought in some dry regions, higher wildfire risk, accelerating sea‑level rise, stronger coastal flooding, and rising risks to water, food, health, and ecosystems.</p>`},
+  {id:'acid-rain',title:'What is acid rain, and explain the effect it has on our environment.',body:`<p><strong>Acid rain</strong> occurs when SO₂ and NOₓ form sulfuric/nitric acids that fall with rain/snow or as dry particles. It acidifies lakes/streams, harms forests (leaches nutrients), and corrodes metal/limestone/marble.</p>`}
+];
+
+const toc = document.getElementById('toc');
+const content = document.getElementById('content');
+const q = document.getElementById('q');
+const compact = document.getElementById('compact');
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+function render(){
+  toc.innerHTML = sections.map(s=>`<li><a href="#${s.id}">${s.title}</a></li>`).join('');
+  content.innerHTML = sections.map(s=>`<section id="${s.id}" class="card"><h2>${s.title}</h2><div class="body">${s.body}</div></section>`).join('');
+}
+render();
+
+function escapeRegExp(str){return str.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function highlight(text, term){
+  if(!term) return text;
+  const re = new RegExp(`(${escapeRegExp(term)})`,'gi');
+  return text.replace(re,'<mark>$1</mark>');
+}
+
+q.addEventListener('input', () => {
+  const term = q.value.trim().toLowerCase();
+  const cards = [...content.querySelectorAll('section.card')];
+  let shown = 0;
+  cards.forEach(card => {
+    const raw = card.textContent.toLowerCase();
+    if(!term || raw.includes(term)){
+      card.classList.remove('hide');
+      const body = card.querySelector('.body');
+      const original = sections.find(s=>s.id===card.id).body;
+      body.innerHTML = highlight(original, term);
+      shown++;
+    }else{
+      card.classList.add('hide');
+    }
+  });
+  if(shown===0){
+    content.innerHTML = `<div class="muted">No matching topics. Try another search.</div>`;
+  } else if(term === ""){
+    render();
+  }
+});
+
+compact.addEventListener('change',()=>{
+  if(compact.checked) content.classList.add('compact'); else content.classList.remove('compact');
+});
+</script>
+</body>
+</html>
